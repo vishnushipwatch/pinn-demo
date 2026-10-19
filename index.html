@@ -43,25 +43,24 @@
     input[type=range]::-webkit-slider-thumb{appearance:none;width:17px;height:17px;border-radius:50%;background:#eaf0f4;border:4px solid var(--green);margin-top:-6.5px;box-shadow:0 1px 7px #0008}
     input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:#eaf0f4;border:4px solid var(--green);box-shadow:0 1px 7px #0008}
     .ticks{display:flex;justify-content:space-between;color:#8f9bac;font:11px "DM Mono",monospace;margin-top:2px}
-    .weather-diagram{display:grid;grid-template-columns:minmax(120px,200px) minmax(100px,1fr);align-items:center;justify-content:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);min-width:0}
+    .weather-diagram{display:grid;grid-template-columns:minmax(120px,1fr);align-items:center;justify-content:center;padding:14px 0;border-bottom:1px solid var(--line);min-width:0}
     .compass{width:min(100%,260px);justify-self:center;aspect-ratio:1}
     .compass svg{display:block;width:100%;height:100%;overflow:visible}
-    .weather-summary{display:grid;gap:14px}
-    .weather-summary-row{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
-    .weather-summary-row strong{margin-left:auto;color:var(--ink);font:13px "DM Mono",monospace}
-    .weather-key{width:9px;height:9px;border-radius:50%;flex:none}
-    .weather-key.wind{background:#68c3dd}.weather-key.wave{background:#f0a35f}.weather-key.bf{background:var(--green)}
     #windGusts{opacity:var(--wind-strength,0)}
-    #windGusts path{stroke-dasharray:5 9;animation:wind-flow var(--wind-duration,2s) linear infinite}
-    @keyframes wind-flow{to{stroke-dashoffset:-28}}
-    .weather-controls{display:grid;grid-template-columns:minmax(240px,36%) minmax(0,1fr);grid-template-rows:repeat(3,minmax(54px,auto));gap:10px 28px;margin-top:17px;align-items:center}
-    .weather-diagram{grid-column:1;grid-row:1 / span 3}
+    #windGusts path{animation:wind-streak var(--wind-duration,2s) ease-in infinite;transform-box:fill-box;transform-origin:center}
+    #windGusts path:nth-child(2){animation-delay:calc(var(--wind-duration,2s) * -.34)}
+    #windGusts path:nth-child(3){animation-delay:calc(var(--wind-duration,2s) * -.67)}
+    @keyframes wind-streak{from{transform:translateY(-8px);opacity:.2}to{transform:translateY(14px);opacity:1}}
+    #waveMotion{opacity:var(--wave-strength,0);animation:wave-flow var(--wave-duration,3s) ease-in infinite}
+    @keyframes wave-flow{from{transform:translateY(-12px)}to{transform:translateY(20px)}}
+    .weather-controls{display:grid;grid-template-columns:minmax(240px,36%) minmax(0,1fr);grid-template-rows:repeat(4,minmax(54px,auto));gap:10px 28px;margin-top:17px;align-items:center}
+    .weather-diagram{grid-column:1;grid-row:1 / span 4}
     .weather-control{grid-column:2;min-width:0}
     .weather-label{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700}
     .weather-label strong{color:var(--green);font:12px "DM Mono",monospace;white-space:nowrap}
     .weather-control .ticks{font-size:10px}
     @media(max-width:850px){.workspace{grid-template-columns:1fr}}
-    @media(max-width:560px){.shell{padding:17px 12px 24px}.topbar{padding-bottom:13px}.intro{display:block;padding:23px 0 17px}.plot-head{padding:14px 13px 0}.plot-head h2{font-size:14px}#plot{height:390px;min-height:350px}.timeline{padding:15px 14px}.timeline-top{align-items:start}.weather-diagram{grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,190px) minmax(95px,1fr);gap:13px;padding:17px 0 14px}.weather-summary{gap:11px}.weather-summary-row{font-size:11px;gap:7px}.weather-summary-row strong{font-size:11px}.weather-controls{grid-template-columns:1fr;grid-template-rows:auto;gap:10px;margin-top:14px}.weather-control{grid-column:auto;display:grid;grid-template-columns:100px minmax(0,1fr) 40px;align-items:center;gap:10px}.weather-control input[type=range]{margin:0}.weather-control .ticks{display:none}}
+    @media(max-width:560px){.shell{padding:17px 12px 24px}.topbar{padding-bottom:13px}.intro{display:block;padding:23px 0 17px}.plot-head{padding:14px 13px 0}.plot-head h2{font-size:14px}#plot{height:390px;min-height:350px}.timeline{padding:15px 14px}.timeline-top{align-items:start}.weather-diagram{grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,1fr);padding:17px 0 14px}.weather-controls{grid-template-columns:1fr;grid-template-rows:auto;gap:10px;margin-top:14px}.weather-control{grid-column:auto;display:grid;grid-template-columns:100px minmax(0,1fr) 40px;align-items:center;gap:10px}.weather-control input[type=range]{margin:0}.weather-control .ticks{display:none}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
 </head>
@@ -83,32 +82,29 @@
           <input id="timeSlider" type="range" min="0" max="12" step="0.1" value="0" aria-label="Advance model from baseline to three months">
           <div class="ticks"><span>BASELINE</span><span>1 MONTH</span><span>2 MONTHS</span><span>3 MONTHS</span></div>
           <div class="weather-controls" aria-label="Weather conditions">
-            <div class="weather-diagram" role="img" aria-label="Compass diagram showing vessel heading, wind direction, wave direction, and Beaufort force">
+            <div class="weather-diagram" role="img" aria-label="Compass diagram showing incoming wind and wave directions relative to the vessel, Beaufort force, and Douglas sea state">
               <div class="compass">
                 <svg viewBox="0 0 240 240" aria-hidden="true">
                   <circle cx="120" cy="120" r="105" fill="#111a2b" stroke="#354155" stroke-width="1.5"/>
                   <circle cx="120" cy="120" r="78" fill="none" stroke="#29354a" stroke-width="1" stroke-dasharray="2 5"/>
                   <path d="M120 32v176M32 120h176M58 58l124 124M182 58 58 182" stroke="#344056" stroke-width="1"/>
-                  <text x="120" y="20" text-anchor="middle" fill="#a4afbf" font-size="10" font-family="DM Mono,monospace">N · HEADING</text>
+                  <text x="120" y="20" text-anchor="middle" fill="#a4afbf" font-size="10" font-family="DM Mono,monospace">0° · BOW</text>
+                  <text x="120" y="44" text-anchor="middle" fill="#718096" font-size="8" font-family="DM Mono,monospace">WIND / WAVES FROM</text>
                   <text x="120" y="232" text-anchor="middle" fill="#718096" font-size="9" font-family="DM Mono,monospace">S</text>
                   <text x="10" y="123" text-anchor="start" fill="#718096" font-size="9" font-family="DM Mono,monospace">W</text>
                   <text x="230" y="123" text-anchor="end" fill="#718096" font-size="9" font-family="DM Mono,monospace">E</text>
-                  <g id="windBearing"><line x1="120" y1="120" x2="120" y2="35" stroke="#68c3dd" stroke-width="4" stroke-linecap="round"/><path d="M120 27l-7 13h14z" fill="#68c3dd"/><g id="windGusts" fill="none" stroke="#9be5f5" stroke-width="2.5" stroke-linecap="round"><path d="M110 51v29"/><path d="M120 58v34"/><path d="M130 51v29"/></g></g>
-                  <g id="waveBearing"><line x1="120" y1="120" x2="120" y2="52" stroke="#f0a35f" stroke-width="3" stroke-linecap="round"/><path d="M120 45l-6 11h12z" fill="#f0a35f"/></g>
+                  <g id="windBearing"><line x1="120" y1="20" x2="120" y2="76" stroke="#68c3dd" stroke-width="4" stroke-linecap="round"/><path d="M120 84l-7-13h14z" fill="#68c3dd"/><g id="windGusts" fill="none" stroke="#9be5f5" stroke-width="2.5" stroke-linecap="round"><path d="M110 30v22"/><path d="M120 26v28"/><path d="M130 30v22"/></g></g>
+                  <g id="waveBearing"><line x1="120" y1="20" x2="120" y2="67" stroke="#f0a35f" stroke-width="3" stroke-linecap="round"/><path d="M120 75l-6-12h12z" fill="#f0a35f"/><g id="waveMotion" fill="none" stroke="#ffd0a4" stroke-width="2" stroke-linecap="round"><g class="wave-symbol"><path d="M108 31q7-8 13-1t11 1"/></g><g class="wave-symbol" transform="translate(0 18)"><path d="M108 31q7-8 13-1t11 1"/></g></g></g>
                   <path d="M120 82c-8 12-13 24-13 38v34c0 7 5 12 13 12s13-5 13-12v-34c0-14-5-26-13-38z" fill="#dce5e9" stroke="#f6fbfc" stroke-width="1.5"/>
                   <path d="M120 90v66" stroke="#80919b" stroke-width="1.5"/>
                   <circle cx="120" cy="120" r="4" fill="#81c915" stroke="#111a2b" stroke-width="2"/>
                 </svg>
               </div>
-              <div class="weather-summary" aria-hidden="true">
-                <div class="weather-summary-row"><span class="weather-key wind"></span><span>Wind</span><strong id="windValue">0°</strong></div>
-                <div class="weather-summary-row"><span class="weather-key wave"></span><span>Waves</span><strong id="waveValue">0°</strong></div>
-                <div class="weather-summary-row"><span class="weather-key bf"></span><span>Beaufort</span><strong id="bfValue">0 BF</strong></div>
-              </div>
             </div>
-            <label class="weather-control"><span class="weather-label">Wind direction</span><input id="windSlider" type="range" min="0" max="359" step="1" value="0" aria-label="Wind direction in degrees"><span class="weather-label"><strong id="windInputValue">0°</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Wave direction</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="0" aria-label="Wave direction in degrees"><span class="weather-label"><strong id="waveInputValue">0°</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Weather · BF scale</span><input id="bfSlider" type="range" min="0" max="6" step="1" value="0" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">0 BF</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wind direction · from bow</span><input id="windSlider" type="range" min="0" max="359" step="1" value="90" aria-label="Wind direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="windInputValue">90°</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wave direction · from bow</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="210" aria-label="Wave direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="waveInputValue">210°</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Weather · BF scale</span><input id="bfSlider" type="range" min="0" max="5" step="1" value="3" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">3 BF</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Sea state · DSS scale</span><input id="dssSlider" type="range" min="0" max="4" step="1" value="2" aria-label="Douglas Sea Scale value"><span class="weather-label"><strong id="dssInputValue">DSS 2</strong></span></label>
           </div>
         </section>
       </article>
@@ -120,6 +116,7 @@
       const windSlider = document.getElementById('windSlider');
       const waveSlider = document.getElementById('waveSlider');
       const bfSlider = document.getElementById('bfSlider');
+      const dssSlider = document.getElementById('dssSlider');
       const speedGrid = Array.from({length: 21}, (_, i) => 6 + i * 0.5);
       const draftGrid = Array.from({length: 17}, (_, i) => 6 + i * 0.5);
       const baselineExponent = 2;
@@ -167,9 +164,13 @@
       };
       const pointColor = (currentTime, point) => {
         const colorProgress = Math.max(0, Math.min(1, (point.month + 2) / 5));
-        const red = Math.round(255 + (239 - 255) * colorProgress);
-        const green = Math.round(255 + (68 - 255) * colorProgress);
-        const blue = Math.round(255 + (68 - 255) * colorProgress);
+        const colorStops = [[255, 255, 255], [239, 68, 68], [59, 130, 246], [239, 68, 68]];
+        const stopProgress = colorProgress * (colorStops.length - 1);
+        const stopIndex = Math.min(Math.floor(stopProgress), colorStops.length - 2);
+        const blend = stopProgress - stopIndex;
+        const [red, green, blue] = colorStops[stopIndex].map((channel, index) =>
+          Math.round(channel + (colorStops[stopIndex + 1][index] - channel) * blend)
+        );
         return `rgba(${red},${green},${blue},${pointOpacity(currentTime, point)})`;
       };
       const speedExponent = progress => baselineExponent + (finalExponent - baselineExponent) * progress;
@@ -181,10 +182,10 @@
         return k * draft ** (2 / 3) * speed ** exponent;
       };
       const plot = document.getElementById('plot');
-      const weatherFactor = (windDirection, waveDirection, beaufort) => {
+      const weatherFactor = (windDirection, waveDirection, beaufort, seaState) => {
         const windExposure = (1 + Math.cos(windDirection * Math.PI / 180)) / 2;
         const waveExposure = (1 + Math.cos(waveDirection * Math.PI / 180)) / 2;
-        return 1 + beaufort * (0.018 + 0.012 * windExposure + 0.008 * waveExposure);
+        return 1 + beaufort * (0.018 + 0.012 * windExposure) + seaState * (0.006 + 0.008 * waveExposure);
       };
       const surfaceData = (progress, factor) => draftGrid.map(draft => speedGrid.map(speed => physicsPower(speed,draft,progress) * factor));
       function render() {
@@ -194,7 +195,8 @@
         const windDirection = Number(windSlider.value);
         const waveDirection = Number(waveSlider.value);
         const beaufort = Number(bfSlider.value);
-        const weatherScale = weatherFactor(windDirection, waveDirection, beaufort);
+        const seaState = Number(dssSlider.value);
+        const weatherScale = weatherFactor(windDirection, waveDirection, beaufort, seaState);
         const adaptedProgress = progress;
         const traces = [
           {type:'surface', name:'Adapted model', x:speedGrid, y:draftGrid, z:surfaceData(adaptedProgress, weatherScale), opacity:.82, showscale:false, colorscale:[[0,'#246541'],[1,'#a8e34b']], cmin:0, cmax:consumptionAxisMax, hovertemplate:'Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra>Adapted model</extra>'},
@@ -212,20 +214,21 @@
         slider.style.setProperty('--progress', `${month / 12 * 100}%`);
         windSlider.style.setProperty('--progress', `${windDirection / 359 * 100}%`);
         waveSlider.style.setProperty('--progress', `${waveDirection / 359 * 100}%`);
-        bfSlider.style.setProperty('--progress', `${beaufort / 6 * 100}%`);
-        document.querySelector('.compass').style.setProperty('--wind-strength', `${beaufort / 6}`);
+        bfSlider.style.setProperty('--progress', `${beaufort / 5 * 100}%`);
+        dssSlider.style.setProperty('--progress', `${seaState / 4 * 100}%`);
+        document.querySelector('.compass').style.setProperty('--wind-strength', `${beaufort / 5}`);
         document.querySelector('.compass').style.setProperty('--wind-duration', `${2 - beaufort * 0.25}s`);
-        document.getElementById('windValue').textContent = `${windDirection}°`;
-        document.getElementById('waveValue').textContent = `${waveDirection}°`;
-        document.getElementById('bfValue').textContent = `${beaufort} BF`;
+        document.querySelector('.compass').style.setProperty('--wave-strength', `${seaState / 4}`);
+        document.querySelector('.compass').style.setProperty('--wave-duration', `${3 - seaState * 0.2}s`);
         document.getElementById('windInputValue').textContent = `${windDirection}°`;
         document.getElementById('waveInputValue').textContent = `${waveDirection}°`;
         document.getElementById('bfInputValue').textContent = `${beaufort} BF`;
+        document.getElementById('dssInputValue').textContent = `DSS ${seaState}`;
         document.getElementById('windBearing').setAttribute('transform', `rotate(${windDirection} 120 120)`);
         document.getElementById('waveBearing').setAttribute('transform', `rotate(${waveDirection} 120 120)`);
       }
       slider.addEventListener('input', render);
-      [windSlider, waveSlider, bfSlider].forEach(control => control.addEventListener('input', render));
+      [windSlider, waveSlider, bfSlider, dssSlider].forEach(control => control.addEventListener('input', render));
       window.addEventListener('resize', () => Plotly.Plots.resize(plot));
       render();
     })();

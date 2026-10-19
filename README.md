@@ -10,8 +10,9 @@ The interface renders a 3D surface for **speed**, **draft**, and estimated **pow
 - Eight observation clusters with unique origins; four new clusters reveal together as the four baseline clusters fade out
 - Model surface that progresses monotonically from its baseline shape to its final shape over the timeline
 - Timeline from baseline through three months of model progression
-- Wind direction and wave direction controls from 0° to 359°
-- Beaufort wind-force control from 0 to 6 BF
+- Wind direction and wave direction controls from 0° to 359°, relative to the bow (180° is astern)
+- Beaufort wind-force control from 0 to 5 BF, driving wind gust animation
+- Douglas Sea Scale control from 0 to 4 DSS, driving wave animation
 - Weather exposure factor applied to the estimated consumption surface
 - Responsive layout for desktop and mobile screens
 - Reduced-motion support through `prefers-reduced-motion`
@@ -38,8 +39,9 @@ Then open <http://localhost:8000/>.
 - **Rotate the chart:** drag inside the 3D plot.
 - **Zoom the chart:** use the mouse wheel or trackpad gesture.
 - **Advance time:** move the timeline slider from baseline to three months. The slider advances in quarter-month increments.
-- **Change wind and waves:** adjust the direction sliders to rotate the corresponding bearings on the compass.
-- **Increase weather severity:** move the Beaufort slider. Higher values increase wind and wave exposure effects and animate the wind gusts more quickly.
+- **Change wind and waves:** adjust the direction sliders to set the incoming direction relative to the bow. Arrows point toward the vessel; 180° indicates conditions arriving from astern.
+- **Increase wind force:** move the Beaufort slider. Higher values animate wind gusts more quickly and increase wind exposure effects.
+- **Increase sea state:** move the Douglas Sea Scale slider. Higher values strengthen the wave animation and increase wave exposure effects.
 - **Inspect a point:** hover over the surface or observation markers to see speed, draft, and consumption values.
 
 ## Model notes
