@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111a2b">
-  <title>PINN SHIPWATCH</title>
+  <title>PINN PINN Model Demo</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,13 +17,10 @@
     .shell{max-width:1440px;margin:auto;padding:30px clamp(16px,4vw,56px) 36px}
     .topbar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:0 0 18px}
     .brand{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:800;letter-spacing:.02em}
-    .brand-mark{width:32px;height:32px;border-radius:4px;background:var(--green);display:grid;place-items:center;color:#111a2b}
-    .brand-mark svg{width:20px;height:20px}
+    .brand-mark{width:32px;height:32px;display:grid;place-items:center}
+    .brand-mark img{width:24px;height:24px;object-fit:contain}
     .eyebrow,.mono{font-family:"DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
     .eyebrow{font-size:12px;color:var(--green);font-weight:700}
-    .intro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 0 22px}
-    h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:0;margin:8px 0 0;font-weight:800}
-    .intro p{display:none}
     .workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:stretch}
     .plot-panel,.side-panel,.timeline{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow)}
     .plot-panel{min-width:0;border-radius:7px;overflow:hidden;display:flex;flex-direction:column}
@@ -60,18 +57,15 @@
     .weather-label strong{color:var(--green);font:12px "DM Mono",monospace;white-space:nowrap}
     .weather-control .ticks{font-size:10px}
     @media(max-width:850px){.workspace{grid-template-columns:1fr}}
-    @media(max-width:560px){.shell{padding:17px 12px 24px}.topbar{padding-bottom:13px}.intro{display:block;padding:23px 0 17px}.plot-head{padding:14px 13px 0}.plot-head h2{font-size:14px}#plot{height:390px;min-height:350px}.timeline{padding:15px 14px}.timeline-top{align-items:start}.weather-diagram{grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,1fr);padding:17px 0 14px}.weather-controls{grid-template-columns:1fr;grid-template-rows:auto;gap:10px;margin-top:14px}.weather-control{grid-column:auto;display:grid;grid-template-columns:100px minmax(0,1fr) 40px;align-items:center;gap:10px}.weather-control input[type=range]{margin:0}.weather-control .ticks{display:none}}
+    @media(max-width:560px){.shell{padding:17px 12px 24px}.topbar{padding-bottom:13px}.plot-head{padding:14px 13px 0}.plot-head h2{font-size:14px}#plot{height:390px;min-height:350px}.timeline{padding:15px 14px}.timeline-top{align-items:start}.weather-diagram{grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,1fr);padding:17px 0 14px}.weather-controls{grid-template-columns:1fr;grid-template-rows:auto;gap:10px;margin-top:14px}.weather-control{grid-column:auto;display:grid;grid-template-columns:100px minmax(0,1fr) 40px;align-items:center;gap:10px}.weather-control input[type=range]{margin:0}.weather-control .ticks{display:none}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
-      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 16.5 6.2 11l3.1 3 3.2-7 3.3 6 2.2-2.5 3 6H3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>SHIPWATCH</div>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><img src="shipwatch.svg" alt=""></span>PINN Model Demo</div>
     </header>
-    <section class="intro">
-      <div><div class="eyebrow">VESSEL PERFORMANCE</div><h1>PINN MODEL</h1></div>
-    </section>
     <section class="workspace" aria-label="Interactive vessel performance model">
       <article class="plot-panel">
         <div class="plot-head"><div><h2>Speed · Draft · Consumption</h2></div></div>
@@ -202,7 +196,7 @@
             return {type:'scatter3d', mode:'markers', name:cluster.name, x:points.map(point => point.speed), y:points.map(point => point.draft), z:points.map(point => physicsPower(point.speed, point.draft, clusterProgress) * (1 + point.noise) * weatherScale), marker:{size:4,color:points.map(point => pointColor(timelineMonths, point)),showscale:false,line:{width:0}}, hovertemplate:`${cluster.name}<br>Origin: %{customdata:.2f} months from baseline<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>`,customdata:points.map(point => point.month)};
           })
         ];
-        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:false,autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:-0.07164931657407402,y:1.9337127714515352,z:0.19568712673771044}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
+        const layout = {uirevision:'PINN MODEL-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:false,autosize:true,scene:{uirevision:'PINN MODEL-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:-0.10359333630078289,y:-1.6320817659056865,z:0.15388962650991997}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
         Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,modeBarButtonsToRemove:['select2d','lasso2d','toImage']});
         const elapsed = month / 4;
         const label = month === 0 ? 'Baseline' : `${Number.isInteger(elapsed) ? elapsed : elapsed.toFixed(1)} ${elapsed === 1 ? 'month' : 'months'}`;
