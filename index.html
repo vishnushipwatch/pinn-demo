@@ -164,13 +164,9 @@
       };
       const pointColor = (currentTime, point) => {
         const colorProgress = Math.max(0, Math.min(1, (point.month + 2) / 5));
-        const colorStops = [[255, 255, 255], [239, 68, 68], [59, 130, 246], [239, 68, 68]];
-        const stopProgress = colorProgress * (colorStops.length - 1);
-        const stopIndex = Math.min(Math.floor(stopProgress), colorStops.length - 2);
-        const blend = stopProgress - stopIndex;
-        const [red, green, blue] = colorStops[stopIndex].map((channel, index) =>
-          Math.round(channel + (colorStops[stopIndex + 1][index] - channel) * blend)
-        );
+        const red = Math.round(255 + (239 - 255) * colorProgress);
+        const green = Math.round(255 + (68 - 255) * colorProgress);
+        const blue = Math.round(255 + (68 - 255) * colorProgress);
         return `rgba(${red},${green},${blue},${pointOpacity(currentTime, point)})`;
       };
       const speedExponent = progress => baselineExponent + (finalExponent - baselineExponent) * progress;
@@ -206,7 +202,7 @@
             return {type:'scatter3d', mode:'markers', name:cluster.name, x:points.map(point => point.speed), y:points.map(point => point.draft), z:points.map(point => physicsPower(point.speed, point.draft, clusterProgress) * (1 + point.noise) * weatherScale), marker:{size:4,color:points.map(point => pointColor(timelineMonths, point)),showscale:false,line:{width:0}}, hovertemplate:`${cluster.name}<br>Origin: %{customdata:.2f} months from baseline<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>`,customdata:points.map(point => point.month)};
           })
         ];
-        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:true,legend:{x:0,y:1,font:{size:10,color:'#a4afbf'},bgcolor:'rgba(24,35,55,.72)'},autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:0.012388794456043436,y:1.7213294442563545,z:0.10677495185347977}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
+        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:false,autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:0.012388794456043436,y:1.7213294442563545,z:0.10677495185347977}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
         Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,modeBarButtonsToRemove:['select2d','lasso2d','toImage']});
         const elapsed = month / 4;
         const label = month === 0 ? 'Baseline' : `${Number.isInteger(elapsed) ? elapsed : elapsed.toFixed(1)} ${elapsed === 1 ? 'month' : 'months'}`;
