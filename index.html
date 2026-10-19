@@ -80,7 +80,7 @@
         <div class="plot-foot"><span>Drag to rotate · scroll to zoom</span><span>Illustrative normalized vessel data</span></div>
         <section class="timeline" aria-label="Model progression and weather controls">
           <div class="timeline-top"><div class="time-label">Timeline:  <strong id="timeValue">Baseline</strong></div></div>
-          <input id="timeSlider" type="range" min="0" max="12" step="1" value="0" aria-label="Advance model from baseline to three months">
+          <input id="timeSlider" type="range" min="0" max="12" step="0.1" value="0" aria-label="Advance model from baseline to three months">
           <div class="ticks"><span>BASELINE</span><span>1 MONTH</span><span>2 MONTHS</span><span>3 MONTHS</span></div>
           <div class="weather-controls" aria-label="Weather conditions">
             <div class="weather-diagram" role="img" aria-label="Compass diagram showing vessel heading, wind direction, wave direction, and Beaufort force">
@@ -127,38 +127,51 @@
       const referencePower = 4520;
       const consumptionAxisMax = 20000;
       const clusterDefinitions = [
-        {name:'Baseline cluster A', center:[9, 8], month:0},
-        {name:'Baseline cluster B', center:[12, 10], month:0},
-        {name:'New cluster C', center:[13.8, 11.7], month:6},
-        {name:'New cluster D · high consumption', center:[15.1, 13.1], month:9}
+        {name:'Baseline cluster A', center:[9, 8], surface:'baseline'},
+        {name:'Baseline cluster B', center:[12, 10], surface:'baseline'},
+        {name:'Baseline cluster C', center:[7.5, 11.5], surface:'baseline'},
+        {name:'Baseline cluster D', center:[14.5, 7.5], surface:'baseline'},
+        {name:'Final cluster E', center:[14.5, 12.2], surface:'final'},
+        {name:'Final cluster F · high consumption', center:[14.5, 8.1], surface:'final'},
+        {name:'Final cluster G · low power', center:[7.5, 8.2], surface:'final'},
+        {name:'Final cluster H', center:[10.5, 11.5], surface:'final'}
       ];
       const observations = clusterDefinitions.flatMap((definition, clusterIndex) =>
-        Array.from({length:clusterIndex < 2 ? 36 : 12}, (_, offset) => {
-          const angle = offset * 2.399963229728653;
-          const radius = 0.16 + Math.sqrt(offset) * (clusterIndex < 2 ? 0.13 : 0.08);
+        Array.from({length:36}, (_, offset) => {
+          const noiseScale = definition.name === 'Final cluster F · high consumption' ? 0.35 : 1;
+          const angle = (offset % 33) * 2.399963229728653;
+          const radius = 0.16 + Math.sqrt(offset % 33) * 0.13;
+          const noiseValue = Math.sin((clusterIndex + 1) * 127.1 + (offset + 1) * 311.7) * 43758.5453;
+          const origin = definition.surface === 'baseline'
+            ? clusterIndex === 0 && offset === 0
+              ? -2
+              : clusterIndex === 3 && offset === 0
+                ? 0
+                : -2 + Math.random() * 2
+            : Math.random() * (3 - 0.35 / 4);
           return {
-            month: definition.month + (clusterIndex < 2 ? 0 : Math.floor(offset / 4)),
+            month: origin,
             cluster: definition.name,
+            surface: definition.surface,
             speed: Math.max(6.2, Math.min(15.8, definition.center[0] + Math.cos(angle) * radius)),
-            draft: Math.max(6.2, Math.min(13.8, definition.center[1] + Math.sin(angle) * radius))
+            draft: Math.max(6.2, Math.min(13.8, definition.center[1] + Math.sin(angle) * radius)),
+            noise: (noiseValue - Math.floor(noiseValue) - 0.5) * 0.64 * noiseScale
           };
         })
       );
-      const streamingObservations = Array.from({length:24}, (_, index) => {
-        const month = Math.floor(index / 2);
-        const random = seed => {
-          const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-          return value - Math.floor(value);
-        };
-        const seed = index + 1;
-        return {
-          month,
-          speed: 6.8 + random(seed) * 7 + month / 12 * 2.2,
-          draft: 6.8 + random(seed + 104) * 5 + month / 12 * 1.2,
-          noise: (random(seed + 208) - 0.5) * 0.045
-        };
-      });
-      const ageOpacity = (currentMonth, pointMonth) => Math.max(0, 1 - (currentMonth - pointMonth) / 8);
+      const pointOpacity = (currentTime, point) => {
+        const age = currentTime - point.month;
+        const fadeDuration = 0.35;
+        if (age < 0 || age >= 2) return 0;
+        return age <= 2 - fadeDuration ? 1 : (2 - age) / fadeDuration;
+      };
+      const pointColor = (currentTime, point) => {
+        const colorProgress = Math.max(0, Math.min(1, (point.month + 2) / 5));
+        const red = Math.round(255 + (239 - 255) * colorProgress);
+        const green = Math.round(255 + (68 - 255) * colorProgress);
+        const blue = Math.round(255 + (68 - 255) * colorProgress);
+        return `rgba(${red},${green},${blue},${pointOpacity(currentTime, point)})`;
+      };
       const speedExponent = progress => baselineExponent + (finalExponent - baselineExponent) * progress;
       const referenceSpeed = 12;
       const referenceDraft = 9;
@@ -168,7 +181,6 @@
         return k * draft ** (2 / 3) * speed ** exponent;
       };
       const plot = document.getElementById('plot');
-      const observationColors = [[0,'#d6e1dc'],[1,'#ef4444']];
       const weatherFactor = (windDirection, waveDirection, beaufort) => {
         const windExposure = (1 + Math.cos(windDirection * Math.PI / 180)) / 2;
         const waveExposure = (1 + Math.cos(waveDirection * Math.PI / 180)) / 2;
@@ -177,22 +189,22 @@
       const surfaceData = (progress, factor) => draftGrid.map(draft => speedGrid.map(speed => physicsPower(speed,draft,progress) * factor));
       function render() {
         const month = Number(slider.value);
+        const timelineMonths = month / 4;
         const progress = Math.sqrt(month / 12);
         const windDirection = Number(windSlider.value);
         const waveDirection = Number(waveSlider.value);
         const beaufort = Number(bfSlider.value);
         const weatherScale = weatherFactor(windDirection, waveDirection, beaufort);
-        const visibleObservations = observations.filter(point => point.month <= month && month - point.month < 8);
-        const visibleStreamingObservations = streamingObservations.filter(point => point.month <= month && month - point.month < 8);
+        const adaptedProgress = progress;
         const traces = [
-          {type:'surface', name:'Adapted model', x:speedGrid, y:draftGrid, z:surfaceData(progress, weatherScale), opacity:.82, showscale:false, colorscale:[[0,'#246541'],[1,'#a8e34b']], cmin:0, cmax:consumptionAxisMax, hovertemplate:'Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra>Adapted model</extra>'},
-          {type:'scatter3d', mode:'markers', name:'Recent observations', x:visibleStreamingObservations.map(point => point.speed), y:visibleStreamingObservations.map(point => point.draft), z:visibleStreamingObservations.map(point => physicsPower(point.speed,point.draft,Math.sqrt(point.month / 12)) * (1 + point.noise) * weatherScale), marker:{size:4,color:visibleStreamingObservations.map(point => point.month / 12),cmin:0,cmax:1,colorscale:observationColors,showscale:false,opacity:visibleStreamingObservations.map(point => ageOpacity(month, point.month)),line:{color:'#fff0d6',width:1}}, hovertemplate:'Observation<br>Time in window: month %{customdata}<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>',customdata:visibleStreamingObservations.map(point => point.month)},
+          {type:'surface', name:'Adapted model', x:speedGrid, y:draftGrid, z:surfaceData(adaptedProgress, weatherScale), opacity:.82, showscale:false, colorscale:[[0,'#246541'],[1,'#a8e34b']], cmin:0, cmax:consumptionAxisMax, hovertemplate:'Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra>Adapted model</extra>'},
           ...clusterDefinitions.map(cluster => {
-            const points = visibleObservations.filter(point => point.cluster === cluster.name);
-            return {type:'scatter3d', mode:'markers', name:cluster.name, x:points.map(point => point.speed), y:points.map(point => point.draft), z:points.map(point => physicsPower(point.speed, point.draft, Math.sqrt(point.month / 12)) * (1 + 0.012 * Math.sin(point.month * 7 + point.speed)) * weatherScale), marker:{size:4,color:points.map(point => point.month / 12),cmin:0,cmax:1,colorscale:observationColors,showscale:false,opacity:points.map(point => ageOpacity(month, point.month)),line:{color:'#fff0d6',width:1}}, hovertemplate:`${cluster.name}<br>Time in window: month %{customdata}<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>`,customdata:points.map(point => point.month)};
+            const points = observations.filter(point => point.cluster === cluster.name);
+            const clusterProgress = cluster.surface === 'baseline' ? 0 : 1;
+            return {type:'scatter3d', mode:'markers', name:cluster.name, x:points.map(point => point.speed), y:points.map(point => point.draft), z:points.map(point => physicsPower(point.speed, point.draft, clusterProgress) * (1 + point.noise) * weatherScale), marker:{size:4,color:points.map(point => pointColor(timelineMonths, point)),showscale:false,line:{width:0}}, hovertemplate:`${cluster.name}<br>Origin: %{customdata:.2f} months from baseline<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>`,customdata:points.map(point => point.month)};
           })
         ];
-        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:true,legend:{x:0,y:1,font:{size:10,color:'#a4afbf'},bgcolor:'rgba(24,35,55,.72)'},autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:1.55,y:1.55,z:1.05}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
+        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:true,legend:{x:0,y:1,font:{size:10,color:'#a4afbf'},bgcolor:'rgba(24,35,55,.72)'},autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:0.012388794456043436,y:1.7213294442563545,z:0.10677495185347977}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
         Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,modeBarButtonsToRemove:['select2d','lasso2d','toImage']});
         const elapsed = month / 4;
         const label = month === 0 ? 'Baseline' : `${Number.isInteger(elapsed) ? elapsed : elapsed.toFixed(1)} ${elapsed === 1 ? 'month' : 'months'}`;

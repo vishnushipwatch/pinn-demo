@@ -7,7 +7,8 @@ The interface renders a 3D surface for **speed**, **draft**, and estimated **pow
 ## Features
 
 - Interactive Plotly 3D surface of the adapted vessel performance model
-- Synthetic observation points that appear and fade as the timeline advances
+- Eight observation clusters with unique origins; four new clusters reveal together as the four baseline clusters fade out
+- Model surface that progresses monotonically from its baseline shape to its final shape over the timeline
 - Timeline from baseline through three months of model progression
 - Wind direction and wave direction controls from 0° to 359°
 - Beaufort wind-force control from 0 to 6 BF
@@ -58,7 +59,7 @@ Where:
 - `k` is calibrated against a reference point of 12 kn, 9 m draft, and 4,520 kW.
 - `weather_factor` depends on wind direction, wave direction, and Beaufort force.
 
-The observations and progression are illustrative. They should not be interpreted as operational vessel advice, validated fuel-consumption estimates, or a substitute for a trained and calibrated production model.
+The observations and progression are illustrative. The four new clusters receive distinct, randomized origins and reveal together while the baseline clusters fade out. The model surface moves monotonically from its baseline to final power-law shape as the timeline advances. This demonstrates grouped data arrival and model adaptation, not online training of a validated PINN. Results should not be interpreted as operational vessel advice or validated fuel-consumption estimates.
 
 ## Project structure
 
