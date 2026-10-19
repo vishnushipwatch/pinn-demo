@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111a2b">
+  <title>PINN Vessel Performance Demo</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#eef2f6;--muted:#a4afbf;--line:#29354a;--paper:#111a2b;--white:#182337;--green:#81c915;--mint:#b8e2c8;--orange:#ed9b63;--shadow:0 16px 42px rgba(0,0,0,.22)}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(ellipse at 72% 7%,#1b2940 0%,transparent 38%),linear-gradient(145deg,#111a2b,#0d1522 68%,#111d27);color:var(--ink);font-family:Manrope, sans-serif;min-height:100vh}
+    button,input{font:inherit}
+    .shell{max-width:1440px;margin:auto;padding:30px clamp(16px,4vw,56px) 36px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:0 0 18px}
+    .brand{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:800;letter-spacing:.02em}
+    .brand-mark{width:32px;height:32px;border-radius:4px;background:var(--green);display:grid;place-items:center;color:#111a2b}
+    .brand-mark svg{width:20px;height:20px}
+    .eyebrow,.mono{font-family:"DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+    .eyebrow{font-size:12px;color:var(--green);font-weight:700}
+    .intro{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 0 22px}
+    h1{font-size:clamp(32px,4vw,48px);line-height:1.1;letter-spacing:0;margin:8px 0 0;font-weight:800}
+    .intro p{display:none}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:stretch}
+    .plot-panel,.side-panel,.timeline{background:var(--white);border:1px solid var(--line);box-shadow:var(--shadow)}
+    .plot-panel{min-width:0;border-radius:7px;overflow:hidden;display:flex;flex-direction:column}
+    .plot-head{display:flex;align-items:center;justify-content:space-between;padding:17px 20px 0;gap:12px}
+    .plot-head h2{font-size:16px;margin:0;font-weight:800}
+    .plot-sub{display:none}
+    #plot{height:min(64vh,570px);min-height:350px;width:100%}
+    .plot-foot{display:none}
+    .timeline{border-radius:0;border:0;border-top:1px solid var(--line);box-shadow:none;margin-top:auto;padding:17px 20px 15px;background:transparent}
+    .timeline-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .time-label{font-size:15px;font-weight:800}
+    .time-label strong{color:var(--green);font-family:"DM Mono",monospace;font-weight:500;font-size:16px}
+    input[type=range]{appearance:none;width:100%;height:22px;background:transparent;margin:11px 0 0;cursor:pointer;touch-action:pan-y}
+    input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:5px;background:linear-gradient(to right,var(--green) 0%,var(--green) var(--progress,0%),#354155 var(--progress,0%),#354155 100%)}
+    input[type=range]::-moz-range-track{height:4px;border-radius:5px;background:#354155}
+    input[type=range]::-moz-range-progress{height:4px;background:var(--green);border-radius:5px}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:17px;height:17px;border-radius:50%;background:#eaf0f4;border:4px solid var(--green);margin-top:-6.5px;box-shadow:0 1px 7px #0008}
+    input[type=range]::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:#eaf0f4;border:4px solid var(--green);box-shadow:0 1px 7px #0008}
+    .ticks{display:flex;justify-content:space-between;color:#8f9bac;font:11px "DM Mono",monospace;margin-top:2px}
+    .weather-diagram{display:grid;grid-template-columns:minmax(120px,200px) minmax(100px,1fr);align-items:center;justify-content:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);min-width:0}
+    .compass{width:min(100%,260px);justify-self:center;aspect-ratio:1}
+    .compass svg{display:block;width:100%;height:100%;overflow:visible}
+    .weather-summary{display:grid;gap:14px}
+    .weather-summary-row{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+    .weather-summary-row strong{margin-left:auto;color:var(--ink);font:13px "DM Mono",monospace}
+    .weather-key{width:9px;height:9px;border-radius:50%;flex:none}
+    .weather-key.wind{background:#68c3dd}.weather-key.wave{background:#f0a35f}.weather-key.bf{background:var(--green)}
+    #windGusts{opacity:var(--wind-strength,0)}
+    #windGusts path{stroke-dasharray:5 9;animation:wind-flow var(--wind-duration,2s) linear infinite}
+    @keyframes wind-flow{to{stroke-dashoffset:-28}}
+    .weather-controls{display:grid;grid-template-columns:minmax(240px,36%) minmax(0,1fr);grid-template-rows:repeat(3,minmax(54px,auto));gap:10px 28px;margin-top:17px;align-items:center}
+    .weather-diagram{grid-column:1;grid-row:1 / span 3}
+    .weather-control{grid-column:2;min-width:0}
+    .weather-label{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:700}
+    .weather-label strong{color:var(--green);font:12px "DM Mono",monospace;white-space:nowrap}
+    .weather-control .ticks{font-size:10px}
+    @media(max-width:850px){.workspace{grid-template-columns:1fr}}
+    @media(max-width:560px){.shell{padding:17px 12px 24px}.topbar{padding-bottom:13px}.intro{display:block;padding:23px 0 17px}.plot-head{padding:14px 13px 0}.plot-head h2{font-size:14px}#plot{height:390px;min-height:350px}.timeline{padding:15px 14px}.timeline-top{align-items:start}.weather-diagram{grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,190px) minmax(95px,1fr);gap:13px;padding:17px 0 14px}.weather-summary{gap:11px}.weather-summary-row{font-size:11px;gap:7px}.weather-summary-row strong{font-size:11px}.weather-controls{grid-template-columns:1fr;grid-template-rows:auto;gap:10px;margin-top:14px}.weather-control{grid-column:auto;display:grid;grid-template-columns:100px minmax(0,1fr) 40px;align-items:center;gap:10px}.weather-control input[type=range]{margin:0}.weather-control .ticks{display:none}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 16.5 6.2 11l3.1 3 3.2-7 3.3 6 2.2-2.5 3 6H3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>VESSEL PERFORMANCE DEMO</div>
+    </header>
+    <section class="intro">
+      <div><div class="eyebrow">VESSEL PERFORMANCE</div><h1>PINN MODEL</h1></div>
+    </section>
+    <section class="workspace" aria-label="Interactive vessel performance model">
+      <article class="plot-panel">
+        <div class="plot-head"><div><h2>Speed · Draft · Consumption</h2></div></div>
+        <div id="plot" role="img" aria-label="Fixed-frame 3D graph of speed, draft, and consumption for the current model"></div>
+        <div class="plot-foot"><span>Drag to rotate · scroll to zoom</span><span>Illustrative normalized vessel data</span></div>
+        <section class="timeline" aria-label="Model progression and weather controls">
+          <div class="timeline-top"><div class="time-label">Timeline:  <strong id="timeValue">Baseline</strong></div></div>
+          <input id="timeSlider" type="range" min="0" max="12" step="1" value="0" aria-label="Advance model from baseline to three months">
+          <div class="ticks"><span>BASELINE</span><span>1 MONTH</span><span>2 MONTHS</span><span>3 MONTHS</span></div>
+          <div class="weather-controls" aria-label="Weather conditions">
+            <div class="weather-diagram" role="img" aria-label="Compass diagram showing vessel heading, wind direction, wave direction, and Beaufort force">
+              <div class="compass">
+                <svg viewBox="0 0 240 240" aria-hidden="true">
+                  <circle cx="120" cy="120" r="105" fill="#111a2b" stroke="#354155" stroke-width="1.5"/>
+                  <circle cx="120" cy="120" r="78" fill="none" stroke="#29354a" stroke-width="1" stroke-dasharray="2 5"/>
+                  <path d="M120 32v176M32 120h176M58 58l124 124M182 58 58 182" stroke="#344056" stroke-width="1"/>
+                  <text x="120" y="20" text-anchor="middle" fill="#a4afbf" font-size="10" font-family="DM Mono,monospace">N · HEADING</text>
+                  <text x="120" y="232" text-anchor="middle" fill="#718096" font-size="9" font-family="DM Mono,monospace">S</text>
+                  <text x="10" y="123" text-anchor="start" fill="#718096" font-size="9" font-family="DM Mono,monospace">W</text>
+                  <text x="230" y="123" text-anchor="end" fill="#718096" font-size="9" font-family="DM Mono,monospace">E</text>
+                  <g id="windBearing"><line x1="120" y1="120" x2="120" y2="35" stroke="#68c3dd" stroke-width="4" stroke-linecap="round"/><path d="M120 27l-7 13h14z" fill="#68c3dd"/><g id="windGusts" fill="none" stroke="#9be5f5" stroke-width="2.5" stroke-linecap="round"><path d="M110 51v29"/><path d="M120 58v34"/><path d="M130 51v29"/></g></g>
+                  <g id="waveBearing"><line x1="120" y1="120" x2="120" y2="52" stroke="#f0a35f" stroke-width="3" stroke-linecap="round"/><path d="M120 45l-6 11h12z" fill="#f0a35f"/></g>
+                  <path d="M120 82c-8 12-13 24-13 38v34c0 7 5 12 13 12s13-5 13-12v-34c0-14-5-26-13-38z" fill="#dce5e9" stroke="#f6fbfc" stroke-width="1.5"/>
+                  <path d="M120 90v66" stroke="#80919b" stroke-width="1.5"/>
+                  <circle cx="120" cy="120" r="4" fill="#81c915" stroke="#111a2b" stroke-width="2"/>
+                </svg>
+              </div>
+              <div class="weather-summary" aria-hidden="true">
+                <div class="weather-summary-row"><span class="weather-key wind"></span><span>Wind</span><strong id="windValue">0°</strong></div>
+                <div class="weather-summary-row"><span class="weather-key wave"></span><span>Waves</span><strong id="waveValue">0°</strong></div>
+                <div class="weather-summary-row"><span class="weather-key bf"></span><span>Beaufort</span><strong id="bfValue">0 BF</strong></div>
+              </div>
+            </div>
+            <label class="weather-control"><span class="weather-label">Wind direction</span><input id="windSlider" type="range" min="0" max="359" step="1" value="0" aria-label="Wind direction in degrees"><span class="weather-label"><strong id="windInputValue">0°</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wave direction</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="0" aria-label="Wave direction in degrees"><span class="weather-label"><strong id="waveInputValue">0°</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Weather · BF scale</span><input id="bfSlider" type="range" min="0" max="6" step="1" value="0" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">0 BF</strong></span></label>
+          </div>
+        </section>
+      </article>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const slider = document.getElementById('timeSlider');
+      const windSlider = document.getElementById('windSlider');
+      const waveSlider = document.getElementById('waveSlider');
+      const bfSlider = document.getElementById('bfSlider');
+      const speedGrid = Array.from({length: 21}, (_, i) => 6 + i * 0.5);
+      const draftGrid = Array.from({length: 17}, (_, i) => 6 + i * 0.5);
+      const baselineExponent = 2;
+      const finalExponent = 4;
+      const referencePower = 4520;
+      const consumptionAxisMax = 20000;
+      const clusterDefinitions = [
+        {name:'Baseline cluster A', center:[9, 8], month:0},
+        {name:'Baseline cluster B', center:[12, 10], month:0},
+        {name:'New cluster C', center:[13.8, 11.7], month:6},
+        {name:'New cluster D · high consumption', center:[15.1, 13.1], month:9}
+      ];
+      const observations = clusterDefinitions.flatMap((definition, clusterIndex) =>
+        Array.from({length:clusterIndex < 2 ? 36 : 12}, (_, offset) => {
+          const angle = offset * 2.399963229728653;
+          const radius = 0.16 + Math.sqrt(offset) * (clusterIndex < 2 ? 0.13 : 0.08);
+          return {
+            month: definition.month + (clusterIndex < 2 ? 0 : Math.floor(offset / 4)),
+            cluster: definition.name,
+            speed: Math.max(6.2, Math.min(15.8, definition.center[0] + Math.cos(angle) * radius)),
+            draft: Math.max(6.2, Math.min(13.8, definition.center[1] + Math.sin(angle) * radius))
+          };
+        })
+      );
+      const streamingObservations = Array.from({length:24}, (_, index) => {
+        const month = Math.floor(index / 2);
+        const random = seed => {
+          const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+          return value - Math.floor(value);
+        };
+        const seed = index + 1;
+        return {
+          month,
+          speed: 6.8 + random(seed) * 7 + month / 12 * 2.2,
+          draft: 6.8 + random(seed + 104) * 5 + month / 12 * 1.2,
+          noise: (random(seed + 208) - 0.5) * 0.045
+        };
+      });
+      const ageOpacity = (currentMonth, pointMonth) => Math.max(0, 1 - (currentMonth - pointMonth) / 8);
+      const speedExponent = progress => baselineExponent + (finalExponent - baselineExponent) * progress;
+      const referenceSpeed = 12;
+      const referenceDraft = 9;
+      const physicsPower = (speed, draft, progress) => {
+        const exponent = speedExponent(progress);
+        const k = referencePower / (referenceDraft ** (2 / 3) * referenceSpeed ** exponent);
+        return k * draft ** (2 / 3) * speed ** exponent;
+      };
+      const plot = document.getElementById('plot');
+      const observationColors = [[0,'#d6e1dc'],[1,'#ef4444']];
+      const weatherFactor = (windDirection, waveDirection, beaufort) => {
+        const windExposure = (1 + Math.cos(windDirection * Math.PI / 180)) / 2;
+        const waveExposure = (1 + Math.cos(waveDirection * Math.PI / 180)) / 2;
+        return 1 + beaufort * (0.018 + 0.012 * windExposure + 0.008 * waveExposure);
+      };
+      const surfaceData = (progress, factor) => draftGrid.map(draft => speedGrid.map(speed => physicsPower(speed,draft,progress) * factor));
+      function render() {
+        const month = Number(slider.value);
+        const progress = Math.sqrt(month / 12);
+        const windDirection = Number(windSlider.value);
+        const waveDirection = Number(waveSlider.value);
+        const beaufort = Number(bfSlider.value);
+        const weatherScale = weatherFactor(windDirection, waveDirection, beaufort);
+        const visibleObservations = observations.filter(point => point.month <= month && month - point.month < 8);
+        const visibleStreamingObservations = streamingObservations.filter(point => point.month <= month && month - point.month < 8);
+        const traces = [
+          {type:'surface', name:'Adapted model', x:speedGrid, y:draftGrid, z:surfaceData(progress, weatherScale), opacity:.82, showscale:false, colorscale:[[0,'#246541'],[1,'#a8e34b']], cmin:0, cmax:consumptionAxisMax, hovertemplate:'Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra>Adapted model</extra>'},
+          {type:'scatter3d', mode:'markers', name:'Recent observations', x:visibleStreamingObservations.map(point => point.speed), y:visibleStreamingObservations.map(point => point.draft), z:visibleStreamingObservations.map(point => physicsPower(point.speed,point.draft,Math.sqrt(point.month / 12)) * (1 + point.noise) * weatherScale), marker:{size:4,color:visibleStreamingObservations.map(point => point.month / 12),cmin:0,cmax:1,colorscale:observationColors,showscale:false,opacity:visibleStreamingObservations.map(point => ageOpacity(month, point.month)),line:{color:'#fff0d6',width:1}}, hovertemplate:'Observation<br>Time in window: month %{customdata}<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>',customdata:visibleStreamingObservations.map(point => point.month)},
+          ...clusterDefinitions.map(cluster => {
+            const points = visibleObservations.filter(point => point.cluster === cluster.name);
+            return {type:'scatter3d', mode:'markers', name:cluster.name, x:points.map(point => point.speed), y:points.map(point => point.draft), z:points.map(point => physicsPower(point.speed, point.draft, Math.sqrt(point.month / 12)) * (1 + 0.012 * Math.sin(point.month * 7 + point.speed)) * weatherScale), marker:{size:4,color:points.map(point => point.month / 12),cmin:0,cmax:1,colorscale:observationColors,showscale:false,opacity:points.map(point => ageOpacity(month, point.month)),line:{color:'#fff0d6',width:1}}, hovertemplate:`${cluster.name}<br>Time in window: month %{customdata}<br>Speed %{x:.1f} kn<br>Draft %{y:.1f} m<br>Consumption %{z:,.0f} kW<extra></extra>`,customdata:points.map(point => point.month)};
+          })
+        ];
+        const layout = {uirevision:'shipwatch-speed-draft-consumption-frame',margin:{l:0,r:20,t:12,b:0},paper_bgcolor:'#182337',plot_bgcolor:'#182337',showlegend:true,legend:{x:0,y:1,font:{size:10,color:'#a4afbf'},bgcolor:'rgba(24,35,55,.72)'},autosize:true,scene:{uirevision:'shipwatch-speed-draft-consumption-frame',xaxis:{title:{text:'SPEED · kn',font:{size:10,color:'#a4afbf'}},range:[6,16],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},yaxis:{title:{text:'DRAFT · m',font:{size:10,color:'#a4afbf'}},range:[6,14],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},zaxis:{title:{text:'CONSUMPTION · kW',font:{size:10,color:'#a4afbf'}},range:[0,consumptionAxisMax],autorange:false,gridcolor:'#344056',zerolinecolor:'#526078',tickfont:{size:9,color:'#a4afbf'},backgroundcolor:'#182337'},camera:{eye:{x:1.55,y:1.55,z:1.05}},aspectratio:{x:1.15,y:1,z:.72},bgcolor:'#182337'},font:{family:'Manrope, sans-serif',color:'#eef2f6'}};
+        Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,modeBarButtonsToRemove:['select2d','lasso2d','toImage']});
+        const elapsed = month / 4;
+        const label = month === 0 ? 'Baseline' : `${Number.isInteger(elapsed) ? elapsed : elapsed.toFixed(1)} ${elapsed === 1 ? 'month' : 'months'}`;
+        document.getElementById('timeValue').textContent = label;
+        slider.style.setProperty('--progress', `${month / 12 * 100}%`);
+        windSlider.style.setProperty('--progress', `${windDirection / 359 * 100}%`);
+        waveSlider.style.setProperty('--progress', `${waveDirection / 359 * 100}%`);
+        bfSlider.style.setProperty('--progress', `${beaufort / 6 * 100}%`);
+        document.querySelector('.compass').style.setProperty('--wind-strength', `${beaufort / 6}`);
+        document.querySelector('.compass').style.setProperty('--wind-duration', `${2 - beaufort * 0.25}s`);
+        document.getElementById('windValue').textContent = `${windDirection}°`;
+        document.getElementById('waveValue').textContent = `${waveDirection}°`;
+        document.getElementById('bfValue').textContent = `${beaufort} BF`;
+        document.getElementById('windInputValue').textContent = `${windDirection}°`;
+        document.getElementById('waveInputValue').textContent = `${waveDirection}°`;
+        document.getElementById('bfInputValue').textContent = `${beaufort} BF`;
+        document.getElementById('windBearing').setAttribute('transform', `rotate(${windDirection} 120 120)`);
+        document.getElementById('waveBearing').setAttribute('transform', `rotate(${waveDirection} 120 120)`);
+      }
+      slider.addEventListener('input', render);
+      [windSlider, waveSlider, bfSlider].forEach(control => control.addEventListener('input', render));
+      window.addEventListener('resize', () => Plotly.Plots.resize(plot));
+      render();
+    })();
+  </script>
+</body>
+</html>
