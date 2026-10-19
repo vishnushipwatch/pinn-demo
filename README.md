@@ -20,7 +20,7 @@ The interface renders a 3D surface for **speed**, **draft**, and estimated **pow
 The demo is a single HTML file and can be opened directly in a modern browser:
 
 1. Clone or download this repository.
-2. Open [`pinn_interactive.html`](./pinn_interactive.html) in a browser.
+2. Open [`index.html`](./index.html) in a browser.
 
 For a local HTTP server, use any static file server. For example, with Python:
 
@@ -28,7 +28,7 @@ For a local HTTP server, use any static file server. For example, with Python:
 python -m http.server 8000
 ```
 
-Then open <http://localhost:8000/pinn_interactive.html>.
+Then open <http://localhost:8000/>.
 
 > The page loads Plotly and web fonts from CDNs, so the first load requires internet access. A local server is recommended when testing browser behavior rather than opening the file directly.
 
@@ -64,8 +64,9 @@ The observations and progression are illustrative. They should not be interprete
 
 ```text
 pinn-demo/
-├── pinn_interactive.html  # Complete UI, styles, synthetic data, and model logic
-└── README.md               # Project documentation
+├── index.html             # Complete UI, styles, synthetic data, and model logic
+├── vercel.json            # Vercel headers and legacy URL redirect
+└── README.md              # Project documentation
 ```
 
 ## Dependencies
@@ -77,7 +78,7 @@ There are no local package dependencies or build tools. The page uses:
 
 ## Development
 
-Edit `pinn_interactive.html` directly, then refresh the browser to see changes. The main areas are:
+Edit `index.html` directly, then refresh the browser to see changes. The main areas are:
 
 - CSS in the `<style>` block for layout and visual styling
 - Synthetic data and model functions in the `<script>` block
