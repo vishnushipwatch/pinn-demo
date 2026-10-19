@@ -1,4 +1,4 @@
-# PINN Vessel Performance Demo
+# PINN SHIPWATCH
 
 An interactive, browser-based demo for exploring how a physics-informed vessel performance model responds to time progression and weather conditions.
 
