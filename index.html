@@ -96,9 +96,9 @@
               </div>
             </div>
             <label class="weather-control"><span class="weather-label">Wind direction · from bow</span><input id="windSlider" type="range" min="0" max="359" step="1" value="90" aria-label="Wind direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="windInputValue">90°</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Wave direction · from bow</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="210" aria-label="Wave direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="waveInputValue">210°</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Wind · BF scale</span><input id="bfSlider" type="range" min="0" max="5" step="1" value="3" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">3 BF</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Sea state · DSS scale</span><input id="dssSlider" type="range" min="0" max="4" step="1" value="2" aria-label="Douglas Sea Scale value"><span class="weather-label"><strong id="dssInputValue">DSS 2</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wave direction · from bow</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="120" aria-label="Wave direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="waveInputValue">120°</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wind · BF scale</span><input id="bfSlider" type="range" min="0" max="6" step="1" value="3" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">3 BF</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Sea state · DSS scale</span><input id="dssSlider" type="range" min="0" max="6" step="1" value="3" aria-label="Douglas Sea Scale value"><span class="weather-label"><strong id="dssInputValue">DSS 3</strong></span></label>
           </div>
         </section>
       </article>
@@ -204,12 +204,12 @@
         slider.style.setProperty('--progress', `${month / 12 * 100}%`);
         windSlider.style.setProperty('--progress', `${windDirection / 359 * 100}%`);
         waveSlider.style.setProperty('--progress', `${waveDirection / 359 * 100}%`);
-        bfSlider.style.setProperty('--progress', `${beaufort / 5 * 100}%`);
-        dssSlider.style.setProperty('--progress', `${seaState / 4 * 100}%`);
-        document.querySelector('.compass').style.setProperty('--wind-strength', `${beaufort / 5}`);
-        document.querySelector('.compass').style.setProperty('--wind-duration', `${2 - beaufort * 0.25}s`);
-        document.querySelector('.compass').style.setProperty('--wave-strength', `${seaState / 4}`);
-        document.querySelector('.compass').style.setProperty('--wave-duration', `${3 - seaState * 0.2}s`);
+        bfSlider.style.setProperty('--progress', `${beaufort / 6 * 100}%`);
+        dssSlider.style.setProperty('--progress', `${seaState / 6 * 100}%`);
+        document.querySelector('.compass').style.setProperty('--wind-strength', `${beaufort / 6}`);
+        document.querySelector('.compass').style.setProperty('--wind-duration', `${2 - beaufort / 6}s`);
+        document.querySelector('.compass').style.setProperty('--wave-strength', `${seaState / 6}`);
+        document.querySelector('.compass').style.setProperty('--wave-duration', `${3 - seaState / 6}s`);
         document.getElementById('windInputValue').textContent = `${windDirection}°`;
         document.getElementById('waveInputValue').textContent = `${waveDirection}°`;
         document.getElementById('bfInputValue').textContent = `${beaufort} BF`;

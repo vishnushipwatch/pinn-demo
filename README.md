@@ -11,8 +11,8 @@ The interface renders a 3D surface for **speed**, **draft**, and estimated **pow
 - Model surface that progresses monotonically from its baseline shape to its final shape over the timeline
 - Timeline from baseline through three months of model progression
 - Wind direction and wave direction controls from 0° to 359°, relative to the bow (180° is astern)
-- Beaufort wind-force control from 0 to 5 BF, driving wind gust animation
-- Douglas Sea Scale control from 0 to 4 DSS, driving wave animation
+- Beaufort wind-force control from 0 to 6 BF (default 3), driving wind gust animation
+- Douglas Sea Scale control from 0 to 6 DSS (default 3), driving wave animation
 - Weather exposure factor applied to the estimated consumption surface
 - Responsive layout for desktop and mobile screens
 - Reduced-motion support through `prefers-reduced-motion`
