@@ -97,7 +97,7 @@
             </div>
             <label class="weather-control"><span class="weather-label">Wind direction · from bow</span><input id="windSlider" type="range" min="0" max="359" step="1" value="90" aria-label="Wind direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="windInputValue">90°</strong></span></label>
             <label class="weather-control"><span class="weather-label">Wave direction · from bow</span><input id="waveSlider" type="range" min="0" max="359" step="1" value="210" aria-label="Wave direction relative to vessel bow: 0 degrees ahead, 180 degrees astern"><span class="weather-label"><strong id="waveInputValue">210°</strong></span></label>
-            <label class="weather-control"><span class="weather-label">Weather · BF scale</span><input id="bfSlider" type="range" min="0" max="5" step="1" value="3" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">3 BF</strong></span></label>
+            <label class="weather-control"><span class="weather-label">Wind · BF scale</span><input id="bfSlider" type="range" min="0" max="5" step="1" value="3" aria-label="Beaufort scale value"><span class="weather-label"><strong id="bfInputValue">3 BF</strong></span></label>
             <label class="weather-control"><span class="weather-label">Sea state · DSS scale</span><input id="dssSlider" type="range" min="0" max="4" step="1" value="2" aria-label="Douglas Sea Scale value"><span class="weather-label"><strong id="dssInputValue">DSS 2</strong></span></label>
           </div>
         </section>
@@ -175,7 +175,7 @@
       const weatherFactor = (windDirection, waveDirection, beaufort, seaState) => {
         const windExposure = (1 + Math.cos(windDirection * Math.PI / 180)) / 2;
         const waveExposure = (1 + Math.cos(waveDirection * Math.PI / 180)) / 2;
-        return 1 + beaufort * (0.018 + 0.012 * windExposure) + seaState * (0.006 + 0.008 * waveExposure);
+        return 1 + beaufort * (0.0045 + 0.003 * windExposure) + seaState * (0.0075 + 0.01 * waveExposure);
       };
       const surfaceData = (progress, factor) => draftGrid.map(draft => speedGrid.map(speed => physicsPower(speed,draft,progress) * factor));
       function render() {

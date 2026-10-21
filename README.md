@@ -59,7 +59,7 @@ Where:
 - `P` is estimated consumption in kW.
 - `n` transitions from 2 at baseline to 4 at the end of the timeline.
 - `k` is calibrated against a reference point of 12 kn, 9 m draft, and 4,520 kW.
-- `weather_factor` depends on wind direction, wave direction, and Beaufort force.
+- `weather_factor` depends on wind direction, wave direction, Beaufort force, and Douglas sea state. At 3 BF, the Beaufort contribution is 2.25% for wind from the bow, 1.8% for a crosswind, and 1.35% from astern. At DSS 2, the wave contribution is 3.5% head-on, 2.5% crosswise, and 1.5% from astern.
 
 The observations and progression are illustrative. The four new clusters receive distinct, randomized origins and reveal together while the baseline clusters fade out. The model surface moves monotonically from its baseline to final power-law shape as the timeline advances. This demonstrates grouped data arrival and model adaptation, not online training of a validated PINN. Results should not be interpreted as operational vessel advice or validated fuel-consumption estimates.
 
